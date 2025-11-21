@@ -9,6 +9,7 @@ __pycache__/
 
 # Mac System files
 .DS_Store
+.idea
 
 # User data (Optional - if you don't want your personal tasks uploaded)
 tasks.json

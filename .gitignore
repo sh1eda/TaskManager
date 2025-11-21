@@ -1,9 +1,14 @@
-*.ipynb
-*.json
+# Python Virtual Environment
+.venv/
+venv/
+env/
 
-.venv
+# Python compiled files (garbage)
+__pycache__/
+*.pyc
 
+# Mac System files
+.DS_Store
 
-storage.py
-activity.py
-categories.py
+# User data (Optional - if you don't want your personal tasks uploaded)
+tasks.json

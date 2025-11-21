@@ -2,6 +2,7 @@
 .venv/
 venv/
 env/
+data
 
 # Python compiled files (garbage)
 __pycache__/
@@ -13,3 +14,4 @@ __pycache__/
 
 # User data (Optional - if you don't want your personal tasks uploaded)
 tasks.json
+*.ipynb

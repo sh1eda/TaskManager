@@ -12,6 +12,6 @@ __pycache__/
 .DS_Store
 .idea
 
-# User data (Optional - if you don't want your personal tasks uploaded)
-tasks.json
+# User data
+*.json
 *.ipynb

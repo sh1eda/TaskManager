@@ -4,7 +4,8 @@ task_choice = {
     "1": tasks.create_task,
     "2": tasks.view_tasks,
     "3": tasks.del_task,
-    "4": exit
+    "4": tasks.update_task,
+    "5": exit
 }
 
 while True:
@@ -13,8 +14,9 @@ while True:
         print("1. Add a new task")
         print("2. View all tasks")
         print("3. Delete a task")
-        print("4. Exit")
-        userinput = input("Enter a number (1, 2, 3, or 4): ")
+        print("4. Update a task")
+        print("5. Exit")
+        userinput = input("Enter a number (1, 2, 3, 4 or 5): ")
 
         if userinput in task_choice:
             func = task_choice[userinput]

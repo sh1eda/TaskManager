@@ -1,162 +1,97 @@
-import json
-import os
 import datetime
-file_path = "./data/tasks.json"
+from storage import Storage
 
-def create_task():
+class Task:
+    def __init__(self, id, title, description, category, priority, due_date, created_date, updated_date, status="Pending..."):
+        self.id = id
+        self.title = title
+        self.description = description
+        self.category = category
+        self.priority = priority
+        self.due_date = due_date
+        self.created_date = created_date
+        self.updated_date = updated_date
+        self.status = status
 
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            try:
-                tasks = json.load(f)
-            except json.JSONDecodeError:
-                tasks = []
-    else:
-        tasks = []
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id=data.get("id"),
+            title=data.get("task"),
+            description=data.get("description"),
+            category=data.get("category"),
+            priority=data.get("priority"),
+            due_date=data.get("due"),
+            created_date=data.get("created"),
+            updated_date=data.get("updated"),
+            status=data.get("status")
+        )
 
-    task_data = input("Enter the task name: ")
-    task_desc = input("Enter a description: ")
-    task_category = input("Enter a category: ")
-    task_priority = input("Enter a priority (1-5): ")
-    dues = input("Enter due date (YYYY-MM-DD): ")
-    dues = str(datetime.datetime.strptime(dues, "%Y-%m-%d").date())
-    today = str(datetime.date.today())
-    task_id = len(tasks) + 1
-    if not task_data:
-        print("Task name cannot be empty.")
-        return
-    if not task_desc:
-        task_desc = "No description provided."
-    if not task_category:
-        task_category = "Uncategorized"
-    if not task_priority:
-        print("Task priority cannot be empty.")
-        return
-    if not task_priority.isdigit():
-        print("Task priority must be a number.")
-        return
-    if 1 <= int(task_priority) <= 5:
-        task_priority = int(task_priority)
-    else:
-        print("Task priority must be between 1 and 5.")
-    task_data = {"id": task_id, "task": task_data, "description": task_desc, "category": task_category, "priority": task_priority, "due": dues, "created": today, "updated": today, "status": "Pending..."}
-    if not os.path.exists(file_path):
-        ext_data = []
-    else:
-        try:
-            with open(file_path, "r") as f:
-                ext_data = json.load(f)
-        except json.JSONDecodeError:
-            ext_data = []
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "task": self.title,
+            "description": self.description,
+            "category": self.category,
+            "priority": self.priority,
+            "due": self.due_date,
+            "created": self.created_date,
+            "updated": self.updated_date,
+            "status": self.status
+        }
+    
+    def __str__(self):
+        return f"{self.title} (Status: {self.status})"
 
-    ext_data.append(task_data)
 
-    with open(file_path, "w") as f:
-        json.dump(ext_data, f, indent=4)
+class TaskManager:
+    def __init__(self, storage: Storage):
+        self.storage = storage
+        self.tasks = self._load_tasks()
 
-    print("Task created successfully!")
-    return ext_data
+    def _load_tasks(self):
+        data = self.storage.load_data()
+        return [Task.from_dict(t) for t in data]
 
-def view_tasks():
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            try:
-                tasks = json.load(f)
-            except json.JSONDecodeError:
-                tasks = []
-    else:
-        print("Task file not found.")
-        tasks = []
+    def _save_tasks(self):
+        data = [t.to_dict() for t in self.tasks]
+        self.storage.save_data(data)
 
-    if not tasks:
-        print("No task data found.")
-    else:
-        print(f"There is currently ({len(tasks)} tasks):")
-        for index, task in enumerate(tasks, start=1):
-            name = task.get("task", "Unknown Task")
-            status = task.get("status", "No status")
-            print(f"[{index}] {name} (Status: {status})")
+    def add_task(self, title, description, category, priority, due_date):
+        new_id = len(self.tasks) + 1
+        today = str(datetime.date.today())
+        
+        new_task = Task(
+            id=new_id,
+            title=title,
+            description=description,
+            category=category,
+            priority=priority,
+            due_date=due_date,
+            created_date=today,
+            updated_date=today
+        )
+        
+        self.tasks.append(new_task)
+        self._save_tasks()
+        return new_task
 
-def del_task():
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            try:
-                tasks = json.load(f)
-            except json.JSONDecodeError:
-                print("Error: Invalid JSON format.")
-                tasks = []
-    else:
-        print("Task file not found.")
-        tasks = []
+    def get_all_tasks(self):
+        return self.tasks
 
-    if not tasks:
-        print("There is no task yet to delete.")
-    else:
-        print(f"There is currently ({len(tasks)} tasks):")
-        for index, task in enumerate(tasks, start=1):
-            name = task.get("task", "Unknown Task")
-            status = task.get("status", "No status")
-            print(f"[{index}] {name} (Status: {status})")
+    def delete_task(self, index):
+        if 0 <= index < len(self.tasks):
+            removed_task = self.tasks.pop(index)
+            self._save_tasks()
+            return removed_task
+        return None
 
-        task_input = input("\nEnter the number of the task to delete. (Enter to cancel): ")
+    def update_task_status(self, index, new_status):
+        if 0 <= index < len(self.tasks):
+            task = self.tasks[index]
+            task.status = new_status
+            task.updated_date = str(datetime.date.today())
+            self._save_tasks()
+            return task
+        return None
 
-        if task_input.strip():
-            try:
-                delete_index = int(task_input) - 1
-                if 0 <= delete_index < len(tasks):
-                    deleted_task = tasks.pop(delete_index)
-                    print(f"--- '{deleted_task.get('task')}' Removed From the List. ---")
-                    with open(file_path, "w") as f:
-                        json.dump(tasks, f, indent=4)
-                    print("Saved data to file successfully.")
-
-                else:
-                    print(f"ERROR: There is no task numbered {task_input}. (Enter between 1 and {len(tasks)})")
-
-            except ValueError:
-                print("Error: Enter a valid number.")
-        else:
-            print("Cancelled deletion operation. No changes were made to the list.")
-def update_task():
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            try:
-                tasks = json.load(f)
-            except json.JSONDecodeError:
-                tasks = []
-    else:
-        print("Task file not found.")
-        tasks = []
-
-    if not tasks:
-        print("No task data found.")
-    else:
-        for index, task in enumerate(tasks, start=1):
-            name = task.get("task", "Unknown Task")
-            status = task.get("status", "No status")
-            print(f"[{index}] {name} (Status: {status})")
-
-    task_input = input("\nEnter the number of the task to update:")
-    new_status = input("\nEnter the new status: ")
-    if not new_status:
-        print("Status cannot be empty.")
-    elif task_input.strip():
-        try:
-            update_index = int(task_input) - 1
-            if 0 <= update_index < len(tasks):
-                updated_task = tasks[update_index]
-                old_status = updated_task.get("status")
-                updated_task["updated"] = str(datetime.date.today())
-                updated_task["status"] = new_status
-                print(f"--- Task: '{updated_task.get('task')}' Updated. (Old: {old_status} -> New: {new_status}) ---")
-                with open(file_path, "w") as f:
-                    json.dump(tasks, f, indent=4)
-                print("Saved data to file successfully.")
-
-            else:
-                print(f"ERROR: There is no task numbered {task_input}. (Enter between 1 and {len(tasks)})")
-
-        except ValueError:
-            print("Error: Enter a valid number.")
-    else:
-        print("Cancelled deletion operation. No changes were made to the list.")

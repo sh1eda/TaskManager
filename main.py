@@ -69,12 +69,46 @@ def make_layout():
     )
     return layout
 
+def check_upcoming_deadlines(manager, console):
+    tasks = manager.get_all_tasks()
+    today = datetime.now().date()
+    warnings = []
+
+    for task in tasks:
+        if task.status.lower() in ["completed", "done"]:
+            continue
+        
+        try:
+            due_date = datetime.strptime(task.due_date, "%Y-%m-%d").date()
+            delta = (due_date - today).days
+            
+            if 0 <= delta <= 2:
+                warnings.append(f"[bold]{task.title}[/] (Due: {task.due_date})")
+            if delta < 0:
+                warnings.append(f"[bold]{task.title}[/] (Overdue: {task.due_date})")
+                
+        except ValueError:
+            continue
+
+    if warnings:
+        warning_text = "\n".join(warnings)
+        panel = Panel(
+            Align.center(f"[bold red]WARNING: The following tasks are due soon![/]\n\n{warning_text}"),
+            title="[bold red]Upcoming Deadlines[/]",
+            border_style="red"
+        )
+        console.print(panel)
+        time.sleep(3)
+        console.clear()
+
 def main():
     storage = Storage("./data/tasks.json")
     manager = TaskManager(storage)
+    
+    manager.check_overdue_tasks()
+    
     view = TaskView()
     
-    # Filter state
     current_filters = {
         "category": None,
         "priority": None,
@@ -85,6 +119,8 @@ def main():
     layout = make_layout()
     layout["header"].update(make_header())
     layout["footer"].update(make_footer())
+
+    check_upcoming_deadlines(manager, console)
 
     with Live(layout, screen=True, refresh_per_second=4) as live:
         while True:
@@ -168,6 +204,18 @@ def main():
                             idx = IntPrompt.ask("Task ID to update", default=1)
                             if idx > 0 and idx <= len(tasks):
                                 stat = Prompt.ask("New Status")
+                                if stat not in ["Pending", "In Progress", "Completed", "Overdue"]:
+                                    console.print("[red]Invalid Status (Pending, In Progress, Completed, Overdue)[/]")
+                                    time.sleep(3)
+                                    continue
+                                if stat == "Overdue":
+                                    console.print("[red]Overdue status cannot be set manually.[/]")
+                                    time.sleep(1)
+                                    continue
+                                if stat == "Completed":
+                                    console.print("[red]Completed status cannot be set manually.[/]")
+                                    time.sleep(1)
+                                    continue
                                 manager.update_task_status(idx-1, stat)
                                 console.print("[green]Updated![/]")
                             else:

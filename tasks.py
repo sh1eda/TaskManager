@@ -2,7 +2,7 @@ import datetime
 from storage import Storage
 
 class Task:
-    def __init__(self, id, title, description, category, priority, due_date, created_date, updated_date, status="Pending..."):
+    def __init__(self, id, title, description, category, priority, due_date, created_date, updated_date, status="Pending"):
         self.id = id
         self.title = title
         self.description = description
@@ -94,4 +94,24 @@ class TaskManager:
             self._save_tasks()
             return task
         return None
+
+    def check_overdue_tasks(self):
+        modified = False
+        today = datetime.date.today()
+        
+        for task in self.tasks:
+            if task.status.lower() in ["completed", "done", "overdue"]:
+                continue
+            
+            try:
+                due_date = datetime.datetime.strptime(task.due_date, "%Y-%m-%d").date()
+                if due_date < today:
+                    task.status = "Overdue"
+                    task.updated_date = str(today)
+                    modified = True
+            except ValueError:
+                continue
+        
+        if modified:
+            self._save_tasks()
 

@@ -3,10 +3,11 @@
 ### A terminal-based productivity tool for organizing personal tasks, categories, and schedules to use in daily life.
 
 ## Setting Up
-> Not added yet.
+> pip install -r requirements.txt
 
 ## Example Usage
-> Not added yet.
+> python main.py
+### After the program starts, you will be greeted with a menu. You can navigate through the menu using the navigation numbers. 
 
 ## TODO
 - [x] Navigation
@@ -14,7 +15,7 @@
 - [x] Main Task Functions
 - [x] Filter Functions
 - [x] Search Functions
-- [ ] Warning For Upcoming Tasks
+- [x] Warning For Upcoming Tasks
 - [ ] Create and manage categories with descriptions and color codes
 - [ ] Assign multiple tags to tasks and allow bulk reassignment.
 - [ ] Logging and history tracking for task changes.

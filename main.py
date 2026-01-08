@@ -269,7 +269,7 @@ def main():
                     search_term = Prompt.ask("Search Term")
                     tasks = view.search_tasks(manager.get_all_tasks(), search_term)
                     console.print(make_task_table(tasks))
-                    time.sleep(1)
+                    time.sleep(3)
 
                 elif choice == "4":
                     console.rule("[#7CFF5E]Goodbye![/]", style="#7CFF5E")

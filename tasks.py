@@ -1,5 +1,6 @@
 import datetime
 from storage import Storage
+from activity import ActivityLogger
 
 class Task:
     def __init__(self, id, title, description, category, priority, due_date, created_date, updated_date, status="Pending"):
@@ -48,6 +49,7 @@ class TaskManager:
     def __init__(self, storage: Storage):
         self.storage = storage
         self.tasks = self._load_tasks()
+        self.logger = ActivityLogger()
 
     def _load_tasks(self):
         data = self.storage.load_data()
@@ -74,6 +76,7 @@ class TaskManager:
         
         self.tasks.append(new_task)
         self._save_tasks()
+        self.logger.log("Added Task", "None", str(new_task))
         return new_task
 
     def get_all_tasks(self):
@@ -83,15 +86,18 @@ class TaskManager:
         if 0 <= index < len(self.tasks):
             removed_task = self.tasks.pop(index)
             self._save_tasks()
+            self.logger.log("Removed Task", str(removed_task), "None")
             return removed_task
         return None
 
     def update_task_status(self, index, new_status):
         if 0 <= index < len(self.tasks):
             task = self.tasks[index]
+            old_status = task.status
             task.status = new_status
             task.updated_date = str(datetime.date.today())
             self._save_tasks()
+            self.logger.log("Updated Status", old_status, new_status)
             return task
         return None
 
